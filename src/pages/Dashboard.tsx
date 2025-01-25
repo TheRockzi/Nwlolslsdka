@@ -1,19 +1,12 @@
 import React from 'react';
 import Sidebar from '../components/Sidebar';
 import { Activity, Users, Trophy, Brain, ArrowRight } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard = () => {
-  const { profile } = useAuth();
-  
   const stats = [
     { icon: Activity, label: 'Active Labs', value: '12', color: 'from-green-400 to-green-600' },
     { icon: Users, label: 'Users Online', value: '245', color: 'from-blue-400 to-blue-600' },
-    { icon: Trophy, label: 'Completed', value: profile ? 
-      (profile.web_challenges_completed + profile.programming_challenges_completed + profile.crypto_challenges_completed).toString() 
-      : '0', 
-      color: 'from-yellow-400 to-yellow-600' 
-    },
+    { icon: Trophy, label: 'Completed', value: '8', color: 'from-yellow-400 to-yellow-600' },
     { icon: Brain, label: 'Skills Learned', value: '15', color: 'from-purple-400 to-purple-600' },
   ];
 
@@ -22,7 +15,7 @@ const Dashboard = () => {
       <Sidebar />
       <main className="flex-1 ml-64 p-8">
         <div className="animate-slide-up">
-          <h1 className="text-4xl font-bold text-white mb-2 break-words">Welcome back, {profile?.username || 'Hacker'}</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">Welcome back, Hacker</h1>
           <p className="text-gray-400 mb-8">Ready to take on new challenges?</p>
         </div>
         
@@ -37,8 +30,8 @@ const Dashboard = () => {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-400 text-sm mb-1 break-words">{stat.label}</p>
-                  <p className={`text-3xl font-bold bg-gradient-to-r ${stat.color} text-transparent bg-clip-text break-words`}>
+                  <p className="text-gray-400 text-sm mb-1">{stat.label}</p>
+                  <p className={`text-3xl font-bold bg-gradient-to-r ${stat.color} text-transparent bg-clip-text`}>
                     {stat.value}
                   </p>
                 </div>

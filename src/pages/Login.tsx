@@ -1,47 +1,37 @@
 import React, { useState } from 'react';
 import { Terminal, Lock, User, ArrowRight } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onLogin: (username: string, password: string) => void;
+}
+
+const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  
-  const { signIn, signUp } = useAuth();
-  const navigate = useNavigate();
-
-  const validatePassword = (password: string) => {
-    if (password.length < 6) {
-      throw new Error('Password must be at least 6 characters long');
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
     
-    try {
-      if (isRegister) {
-        if (password !== confirmPassword) {
-          throw new Error('Passwords do not match');
-        }
-        validatePassword(password);
-        await signUp(email, password, username);
-      } else {
-        await signIn(email, password);
+    // Simulate loading
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (!isRegister) {
+      onLogin(username, password);
+    } else {
+      // Registration will be handled here when we add Supabase
+      if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        setIsLoading(false);
+        return;
       }
-      navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+      // For now, just switch back to login
+      setIsRegister(false);
     }
+    setIsLoading(false);
   };
 
   return (
@@ -55,38 +45,19 @@ const Login: React.FC = () => {
             KaliumLabs
           </h2>
           <p className="mt-2 text-gray-400">Enter to lab. Hack. Learn. Evolve.</p>
-          {error && (
-            <p className="mt-2 text-red-500 text-sm break-words">{error}</p>
-          )}
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            {isRegister && (
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400 group-hover:text-green-500 transition-colors duration-300" />
-                </div>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border-2 border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-all duration-300"
-                  placeholder="Username"
-                  required
-                  minLength={3}
-                />
-              </div>
-            )}
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <User className="h-5 w-5 text-gray-400 group-hover:text-green-500 transition-colors duration-300" />
               </div>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="block w-full pl-10 pr-3 py-3 border-2 border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-all duration-300"
-                placeholder="Email"
+                placeholder="Username"
                 required
               />
             </div>
@@ -101,7 +72,6 @@ const Login: React.FC = () => {
                 className="block w-full pl-10 pr-3 py-3 border-2 border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-all duration-300"
                 placeholder="Password"
                 required
-                minLength={6}
               />
             </div>
             {isRegister && (
@@ -116,7 +86,6 @@ const Login: React.FC = () => {
                   className="block w-full pl-10 pr-3 py-3 border-2 border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-all duration-300"
                   placeholder="Confirm Password"
                   required
-                  minLength={6}
                 />
               </div>
             )}
@@ -126,7 +95,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-white bg-green-600 hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-white bg-green-600 hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300"
             >
               <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                 <ArrowRight className="h-5 w-5 text-green-500 group-hover:text-white transition-colors duration-300 group-hover:translate-x-1" />
@@ -143,10 +112,7 @@ const Login: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setIsRegister(!isRegister);
-                setError('');
-              }}
+              onClick={() => setIsRegister(!isRegister)}
               className="text-green-500 hover:text-green-400 transition-colors duration-300"
             >
               {isRegister ? 'Already have an account? Sign in' : 'Need an account? Register'}
