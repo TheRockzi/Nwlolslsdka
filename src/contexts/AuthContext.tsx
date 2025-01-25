@@ -29,8 +29,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchProfile = async (userId: string) => {
+    try {
+      // First try to get the existing profile
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (existingProfile) {
+        setProfile(existingProfile);
+        return;
+      }
+
+      // If no profile exists and there was no other error, create one
+      if (fetchError?.code === 'PGRST116' || !existingProfile) {
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: userId,
+            username: `user_${userId.slice(0, 8)}`,
+            web_challenges_completed: 0,
+            programming_challenges_completed: 0,
+            crypto_challenges_completed: 0,
+            is_staff: false
+          }])
+          .select()
+          .single();
+
+        if (createError) {
+          // If creation failed, try one more time to fetch (in case of race condition)
+          const { data: retryProfile, error: retryError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+
+          if (retryError) throw retryError;
+          setProfile(retryProfile);
+        } else {
+          setProfile(newProfile);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setProfile(null);
+    }
+  };
+
   useEffect(() => {
-    // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -39,11 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchProfile(session.user.id);
+        fetchProfile(session.user.id);
       } else {
         setProfile(null);
       }
@@ -52,28 +99,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      setProfile(null);
-    }
-  };
-
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
   };
 
   const signUp = async (email: string, password: string, username: string) => {
+    if (password.length < 6) {
+      throw new Error('Password must be at least 6 characters long');
+    }
+
     const { error: signUpError, data } = await supabase.auth.signUp({ 
       email, 
       password,
@@ -94,9 +129,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }]);
       
       if (profileError) {
-        // If profile creation fails, delete the auth user
-        await supabase.auth.admin.deleteUser(data.user.id);
-        throw profileError;
+        console.error('Error creating profile:', profileError);
+        // Don't throw here - the auth was successful and profile will be created on first login
       }
     }
   };

@@ -15,6 +15,12 @@ const Login: React.FC = () => {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
+  const validatePassword = (password: string) => {
+    if (password.length < 6) {
+      throw new Error('Password must be at least 6 characters long');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -25,6 +31,7 @@ const Login: React.FC = () => {
         if (password !== confirmPassword) {
           throw new Error('Passwords do not match');
         }
+        validatePassword(password);
         await signUp(email, password, username);
       } else {
         await signIn(email, password);
@@ -66,6 +73,7 @@ const Login: React.FC = () => {
                   className="block w-full pl-10 pr-3 py-3 border-2 border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-all duration-300"
                   placeholder="Username"
                   required
+                  minLength={3}
                 />
               </div>
             )}
@@ -93,6 +101,7 @@ const Login: React.FC = () => {
                 className="block w-full pl-10 pr-3 py-3 border-2 border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-all duration-300"
                 placeholder="Password"
                 required
+                minLength={6}
               />
             </div>
             {isRegister && (
@@ -107,6 +116,7 @@ const Login: React.FC = () => {
                   className="block w-full pl-10 pr-3 py-3 border-2 border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-all duration-300"
                   placeholder="Confirm Password"
                   required
+                  minLength={6}
                 />
               </div>
             )}
