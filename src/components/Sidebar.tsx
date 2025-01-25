@@ -1,8 +1,11 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FlaskRound as Flask, Target, User, Settings, Terminal, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, FlaskRound as Flask, Target, User, Settings, Terminal, ChevronRight, Shield } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = () => {
+  const { profile } = useAuth();
+  
   const menuItems = [
     { icon: LayoutDashboard, text: 'Dashboard', path: '/dashboard' },
     { icon: Flask, text: 'Labs', path: '/labs' },
@@ -10,6 +13,11 @@ const Sidebar = () => {
     { icon: User, text: 'Profile', path: '/profile' },
     { icon: Settings, text: 'Settings', path: '/settings' },
   ];
+
+  // Add Staff Panel for staff members
+  if (profile?.is_staff) {
+    menuItems.push({ icon: Shield, text: 'Staff Panel', path: '/staff' });
+  }
 
   return (
     <div className="h-screen w-64 bg-gray-800 text-white fixed left-0 top-0 shadow-lg">

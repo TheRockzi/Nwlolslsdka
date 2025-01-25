@@ -1,28 +1,32 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Labs from './pages/Labs';
 import Challenges from './pages/Challenges';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import StaffPanel from './pages/StaffPanel';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { user, loading, profile } = useAuth();
 
-  const handleLogin = (username: string, password: string) => {
-    if (username === 'admin' && password === 'admin') {
-      setIsAuthenticated(true);
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
       <Route 
         path="/login" 
         element={
-          !isAuthenticated ? (
-            <Login onLogin={handleLogin} />
+          !user ? (
+            <Login />
           ) : (
             <Navigate to="/dashboard" replace />
           )
@@ -31,7 +35,7 @@ function App() {
       <Route
         path="/dashboard"
         element={
-          isAuthenticated ? (
+          user ? (
             <Dashboard />
           ) : (
             <Navigate to="/login" replace />
@@ -41,7 +45,7 @@ function App() {
       <Route
         path="/labs"
         element={
-          isAuthenticated ? (
+          user ? (
             <Labs />
           ) : (
             <Navigate to="/login" replace />
@@ -51,7 +55,7 @@ function App() {
       <Route
         path="/challenges"
         element={
-          isAuthenticated ? (
+          user ? (
             <Challenges />
           ) : (
             <Navigate to="/login" replace />
@@ -61,7 +65,7 @@ function App() {
       <Route
         path="/profile"
         element={
-          isAuthenticated ? (
+          user ? (
             <Profile />
           ) : (
             <Navigate to="/login" replace />
@@ -71,10 +75,20 @@ function App() {
       <Route
         path="/settings"
         element={
-          isAuthenticated ? (
+          user ? (
             <Settings />
           ) : (
             <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/staff"
+        element={
+          user && profile?.is_staff ? (
+            <StaffPanel />
+          ) : (
+            <Navigate to="/dashboard" replace />
           )
         }
       />
